@@ -47,12 +47,12 @@ For format information, please look at
 	    (goto-char (point-max))
 	  (if (not (eq current-face nil))
 	      (progn (insert (format "<color=%s>" (face-attribute current-face :foreground)))
-	    	     (forward-char (- next-change 1)) ;; `next-change' の位置にあるのは、既にfaceが切り替わった後のCharで、その手前に挿入したい
+		     (goto-char next-change)
 	    	     (insert "</color>")
 	    	     (forward-char (length "</color>")))
-	    (forward-char (min next-change (- (point-max) (point)))))
 	  )
 	))
+	    (goto-char next-change))
     (buffer-string)))
 
 ;; (ws-start
