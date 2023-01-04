@@ -44,7 +44,7 @@ For format information, please look at
 	    (current-face (get-text-property (point) 'face))
 	    )
 	(if (eq next-change nil)
-	    (end-of-buffer)
+	    (goto-char (point-max))
 	  (if (not (eq current-face nil))
 	      (progn (insert (format "<color=%s>" (face-attribute current-face :foreground)))
 	    	     (forward-char (- next-change 1)) ;; `next-change' の位置にあるのは、既にfaceが切り替わった後のCharで、その手前に挿入したい
