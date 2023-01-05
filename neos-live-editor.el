@@ -31,31 +31,31 @@
     (process-send-string process "This is test\n"))
   )
 
-(defun neos-live-editor/format (text)
+(defun neos-live-editor/format (original-buffer begin end)
   "Format using neos' rich text format.
 For format information, please look at
 
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
-  (with-temp-buffer
-    (insert text)
-    (goto-char (point-min))
-    (while (not (eobp))
-      (let* ((next-change (next-single-property-change (point) 'face (current-buffer) (point-max)))
-	    (next-change-marker (set-marker (make-marker) next-change))
-	    (current-face (get-text-property (point) 'face))
-	    )
-	(if (eq next-change nil)
-	    (goto-char (point-max))
-	  (if (not (eq current-face nil))
-	      (progn (insert (format "<color=%s>" (face-attribute current-face :foreground)))
-	  	     (goto-char next-change-marker)
-	    	     (insert "</color>")
-		     )
-	    (goto-char next-change-marker))
-	  )
-	(set-marker next-change-marker nil)
-	))
-    (buffer-string)))
+  (let ((text (with-current-buffer original-buffer (buffer-substring begin end))))
+    (with-temp-buffer
+      (insert text)
+      (goto-char (point-min))
+      (while (not (eobp))
+      	(let* ((next-change (next-single-property-change (point) 'face original-buffer (point-max)))
+      	       (next-change-marker (set-marker (make-marker) next-change))
+      	       (current-face (get-text-property (point) 'face))
+      	       )
+      	  (if (eq next-change nil)
+      	      (goto-char (point-max))
+      	    (if (not (eq current-face nil))
+      		(progn (insert (format "<color=%s>" "red")); (face-attribute current-face :foreground)))
+      	      	       (goto-char next-change-marker)
+      	      	       (insert "</color>")
+      	      	       )
+      	      (goto-char next-change-marker)))
+      	  (set-marker next-change-marker nil)
+      	  ))
+      (buffer-string))))
 
 (defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
   "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
