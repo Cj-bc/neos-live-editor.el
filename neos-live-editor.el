@@ -50,7 +50,7 @@ For format information, please look at
 	      (progn (insert (format "<color=%s>" (face-attribute current-face :foreground)))
 	  	     (goto-char next-change-marker)
 	    	     (insert "</color>")
-	    	     (forward-char (length "</color>")))
+		     )
 	    (goto-char next-change-marker))
 	  )
 	))
