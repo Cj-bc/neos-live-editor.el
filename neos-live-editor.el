@@ -53,6 +53,7 @@ For format information, please look at
 		     )
 	    (goto-char next-change-marker))
 	  )
+	(set-marker next-change-marker nil)
 	))
     (buffer-string)))
 
