@@ -39,9 +39,16 @@ For format information, please look at
   (let ((text (with-current-buffer original-buffer (buffer-substring begin end))))
     (with-temp-buffer
       (insert text)
+      (neos-live-editor/format/apply-tags)
+      (buffer-string))))
+
+(defun neos-live-editor/format/apply-tags (&optional buffer)
+  "Insert neos' rich text tags based on face."
+  (let ((buf (or buffer (current-buffer))))
+    (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
-      	(let* ((next-change (next-single-property-change (point) 'face original-buffer (point-max)))
+	(let* ((next-change (next-single-property-change (point) 'face buf (point-max)))
       	       (next-change-marker (set-marker (make-marker) next-change))
       	       (current-face (get-text-property (point) 'face))
       	       )
@@ -53,9 +60,7 @@ For format information, please look at
       	      	       (insert "</color>")
       	      	       )
       	      (goto-char next-change-marker)))
-      	  (set-marker next-change-marker nil)
-      	  ))
-      (buffer-string))))
+      	  (set-marker next-change-marker nil))))))
 
 (defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
   "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
