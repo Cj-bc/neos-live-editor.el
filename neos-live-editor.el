@@ -40,6 +40,9 @@ For format information, please look at
     (with-temp-buffer
       (insert text)
       (neos-live-editor/format/apply-tags)
+      (neos-live-editor/format/append-line-number
+       (with-current-buffer original-buffer
+      	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
       (buffer-string))))
 
 (defun neos-live-editor/format/apply-tags (&optional buffer)
@@ -78,6 +81,19 @@ BEG, END should be integer or marker. TAG-NAME, PARAMETER should be string."
       (insert (format "</%s>" tag-name))
       (set-marker end-marker nil)
       )))
+
+(defun neos-live-editor/format/append-line-number (window-start-line-number &optional buffer)
+  "Insert line number at the beginning of each line in BUFFER (or `current-buffer' when it's nil)
+First line will be `window-start-line-number'"
+  (let* ((buf (or buffer (current-buffer)))
+	 (offset (- window-start-line-number 1)))
+    (save-excursion
+      (with-current-buffer buf
+	(goto-char (point-min))
+	(while (not (eobp))
+      	  (insert (seq-subseq (format "    %s " (+ offset (line-number-at-pos))) -4))
+      	  (vertical-motion 1)
+      	  )))))
 
 ;; (ws-start
 ;;  '(((:GET . "/v1/live/neos") . neos-live-editor/handler/v1/neos))
