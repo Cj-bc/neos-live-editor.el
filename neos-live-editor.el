@@ -57,6 +57,23 @@ For format information, please look at
 	))
     (buffer-string)))
 
+(defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
+  "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
+If BUFFER is `nil', it will use `current-buffer'.
+BEG, END should be integer or marker. TAG-NAME, PARAMETER should be string."
+  (save-excursion
+    (let ((buf (or buffer (current-buffer)))
+	  (end-marker (if (markerp end) end (set-marker (make-marker) end)))
+	  )
+      (goto-char beg)
+      (if parameter
+    	  (insert (format "<%s=%s>" tag-name parameter))
+	(insert (format "<%s>" tag-name)))
+      (goto-char end-marker)
+      (insert (format "</%s>" tag-name))
+      (set-marker end-marker nil)
+      )))
+
 ;; (ws-start
 ;;  '(((:GET . "/v1/live/neos") . neos-live-editor/handler/v1/neos))
 ;;  39451)
