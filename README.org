@@ -1,0 +1,15 @@
+[[file:JA_README.org][日本語はこちら]]
+*Caveat: This is still in active development.*
+
+* neos-live-edior.el
+This is Emacs port of [[https://github.com/rheniumNV/neos-live-editor][rheniumNV/neos-live-editor]].
+
+** What is it?
+neos-live-editor.el is server for rhenium's neos-live-editor.
+You can mirror your emacs buffer to neosVR!
+** Features
++ [ ] compatibility with neos-live-editor
+** Installation
+** Usage
+Neos side is the same as the original.
+After loading neos-live-editor.el, call ~neos-live-editor/run~ to run the server.

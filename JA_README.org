@@ -1,0 +1,20 @@
+[[file:README.org][English README]]
+
+*注意: まだ開発段階です*
+
+* neos-live-editor.el
+[[https://github.com/rheniumNV/neos-live-editor][rheniumNV/neos-live-editor]]のEmacs版です。
+
+** これは何？
+neos-live-editor.elは、rheniumさんのneos-live-editor用のサーバーです。
+EmacsのBufferをNeosVRにミラーリングすることが出来ます!
+
+** 機能
++ [ ] neos-live-editorとの互換性
+
+** インストール方法
+
+** 使い方
+Neos側は本家と同じセットアップを行います。
+neos-live-edior.elを読み込んだら、 ~neos-live-editor/run~ を実行すれば
+動きます
