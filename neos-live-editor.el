@@ -45,6 +45,12 @@ For format information, please look at
       (neos-live-editor/format/apply-tags)
       (buffer-string))))
 
+(defun neos-live-editor/format/insert-cursor (cursor-pos &optional buffer)
+  "Insert cursor text at CURSOR-POS (MARKER) on BUFFER (or `current-buffer' when it's nil)"
+  (with-current-buffer (or buffer (current-buffer))
+    (goto-char cursor-pos)
+    (insert "<$cursor />")))
+
 (defun neos-live-editor/format/apply-tags (&optional buffer)
   "Insert neos' rich text tags based on face."
   (let ((buf (or buffer (current-buffer))))
