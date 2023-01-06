@@ -31,18 +31,28 @@
     (process-send-string process "This is test\n"))
   )
 
-(defun neos-live-editor/format (original-buffer begin end)
+(defun neos-live-editor/format (original-window begin end)
   "Format using neos' rich text format.
 For format information, please look at
 
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
-  (let ((text (with-current-buffer original-buffer (buffer-substring begin end))))
+  (let* ((original-buffer (window-buffer original-window))
+	 (text (with-current-buffer original-buffer (buffer-substring begin end)))
+	 (cursor-pos-marker (make-marker)))
     (with-temp-buffer
+      ;; Add markers before modifying original text
       (insert text)
+      (set-marker cursor-pos-marker (- (window-point original-window)
+				       (window-start original-window)))
+
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
       	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
+      (neos-live-editor/format/insert-cursor cursor-pos-marker)
       (neos-live-editor/format/apply-tags)
+
+      ;; Release every markers
+      (set-marker cursor-pos-marker nil)
       (buffer-string))))
 
 (defun neos-live-editor/format/insert-cursor (cursor-pos &optional buffer)
