@@ -111,15 +111,24 @@ First line will be `window-start-line-number'"
       	  (vertical-motion 1)
       	  )))))
 
-;; (ws-start
-;;  '(((:GET . "/v1/live/neos") . neos-live-editor/handler/v1/neos))
-;;  39451)
-;; (ws-start (lambda (request)
-;; 	    (with-slots (process headers) request
-;; 	      (ws-response-header process 200 '("Content-type" . "text/plain"))
-;; 	      (process-send-string process (neos-live-editor/format (buffer-string)))
-;; 	      ))  3126
-;; 		  "ws-server-log" :host "0.0.0.0")
+(defun neos-live-editor/server (request)
+  "Server program for neos-live-editor. It should be used with `ws-start'"
+  (with-slots (process headers) request
+  		  (ws-response-header process 200 '("Content-type" . "text/plain"))
+  		  (let* ((window (frame-selected-window))
+  			 (buf (window-buffer window))
+  			 (start (window-start window))
+  			 (end (window-end window))
+  			 )
+  		    (process-send-string process (neos-live-editor/format window start end))
+  		    )))
+
+(defun neos-live-editor/run (port-number &optional log-buffer)
+  "Run neos-live-editor server"
+  (let ((program ))
+    (ws-start 'neos-live-editor/server
+  	      port-number (or log-buffer "neos-live-editor-log")
+	      :host "0.0.0.0")))
 
 (provide 'neos-live-editor)
 ;;; neos-live-editor.el ends here
