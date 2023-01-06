@@ -39,10 +39,10 @@ For format information, please look at
   (let ((text (with-current-buffer original-buffer (buffer-substring begin end))))
     (with-temp-buffer
       (insert text)
-      (neos-live-editor/format/apply-tags)
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
       	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
+      (neos-live-editor/format/apply-tags)
       (buffer-string))))
 
 (defun neos-live-editor/format/apply-tags (&optional buffer)
