@@ -74,12 +74,20 @@ For format information, please look at
       	  (if (eq next-change nil)
       	      (goto-char (point-max))
       	    (if (not (eq current-face nil))
-      		(progn (insert (format "<color=%s>" "red")); (face-attribute current-face :foreground)))
+      		(progn (insert (format "<color=%s>"
+				       (neos-live-editor/format/retrive-fgcolor current-face)))
       	      	       (goto-char next-change-marker)
       	      	       (insert "</color>")
       	      	       )
       	      (goto-char next-change-marker)))
       	  (set-marker next-change-marker nil))))))
+
+(defun neos-live-editor/format/retrive-fgcolor (face)
+  "Return text representation of foreground color of given face."
+  (cond ((listp face) (car (seq-filter 'stringp (seq-map (lambda (s) (face-attribute s :foreground)) face))))
+	((symbolp face) (face-attribute face :foreground))
+	((stringp face) nil) ;; TODO: How can I convert string name to face symbol?
+	(t nil)))
 
 (defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
   "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
