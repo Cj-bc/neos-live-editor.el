@@ -24,6 +24,10 @@
 ;;; Code:
 (require 'web-server)
 
+(defvar neos-live-editor/server-instance nil
+  "Contains `ws-server' object running neos-live-editor.
+If it's nil, no server is running.")
+
 (defun neos-live-editor/handler/v1/neos (request)
   "handler function for default neos-live-editor endpoint"
   (with-slots (process headers) request
@@ -133,11 +137,23 @@ First line will be `window-start-line-number'"
   		    )))
 
 (defun neos-live-editor/run (port-number &optional log-buffer)
-  "Run neos-live-editor server"
-  (let ((program ))
-    (ws-start 'neos-live-editor/server
-  	      port-number (or log-buffer "neos-live-editor-log")
-	      :host "0.0.0.0")))
+  "Run neos-live-editor server and store that server instance into
+`neos-live-editor/server-instance' variable.
+If server is running at any port, it won't run again.
+"
+  (if neos-live-editor/server-instance
+      (message "Server is already running.")
+    (pcase (ws-start 'neos-live-editor/server
+  			   port-number (or log-buffer "neos-live-editor-log")
+			   :host "0.0.0.0")
+      ('nil (message "failed to run neos-live-editor server"))
+      (server (setq neos-live-editor/server-instance server)
+	      (message "neos-live-editor is running at port %d" port-number)))))
+
+(defun neos-live-editor/stop ()
+  "Stop neos-live-editor server stored in `neos-live-editor/server-instance'"
+  (when neos-live-editor/server-instance
+    (ws-stop neos-live-editor/server-instance)))
 
 (provide 'neos-live-editor)
 ;;; neos-live-editor.el ends here
