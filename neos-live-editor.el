@@ -42,8 +42,9 @@ For format information, please look at
     (with-temp-buffer
       ;; Add markers before modifying original text
       (insert text)
-      (set-marker cursor-pos-marker (- (window-point original-window)
-				       (window-start original-window)))
+      (set-marker cursor-pos-marker (+ (- (window-point original-window)
+					  (window-start original-window))
+				       1)) ;; Adjust so that first position is 1.
 
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
