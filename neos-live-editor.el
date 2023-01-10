@@ -50,6 +50,7 @@ For format information, please look at
 					  (window-start original-window))
 				       1)) ;; Adjust so that first position is 1.
 
+      (neos-live-editor/format/delete-invisible-text)
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
       	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
@@ -123,6 +124,29 @@ First line will be `window-start-line-number'"
       	  (insert (seq-subseq (format "    %s " (+ offset (line-number-at-pos))) -4))
       	  (vertical-motion 1)
       	  )))))
+
+(defun neos-live-editor/format/delete-invisible-text (&optional buffer)
+  "Delete all texts that have any sort of 'invisible' text property in
+given BUFFER (or `current-buffer' when it's nil"
+  (with-current-buffer (or buffer (current-buffer))
+    (save-excursion
+      (goto-char (point-min))
+      ;; 1. Make sure while loop start with `point' being placed at
+      ;; text that have `invisible' enabled.
+      (when (equal (get-text-property (point) 'invisible) nil)
+	(goto-char (next-single-property-change (point) 'invisible nil (point-max))))
+      ;; For each iteration, it will do:
+      ;; 1. Remove invisible text
+      ;; 2. Find next invisible text beggining point and move point to there
+      (while (pcase (next-single-property-change (point) 'invisible)
+  	       ('nil (delete-region (point) (point-max)) nil)
+  	       (visible-start
+  		(delete-region (point) visible-start)
+  		(pcase (next-single-property-change (point) 'invisible)
+  		  ('nil nil)
+		  (invisible-start
+  		   (goto-char invisible-start)
+  		   t))))))))
 
 (defun neos-live-editor/server (request)
   "Server program for neos-live-editor. It should be used with `ws-start'"
