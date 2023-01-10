@@ -121,7 +121,9 @@ First line will be `window-start-line-number'"
       (with-current-buffer buf
 	(goto-char (point-min))
 	(while (not (eobp))
-      	  (insert (seq-subseq (format "    %s " (+ offset (line-number-at-pos))) -4))
+      	  (insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos))) 
+			      -4)
+		  "    ")
       	  (vertical-motion 1)
       	  )))))
 
