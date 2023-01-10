@@ -178,7 +178,8 @@ If server is running at any port, it won't run again.
 (defun neos-live-editor/stop ()
   "Stop neos-live-editor server stored in `neos-live-editor/server-instance'"
   (when neos-live-editor/server-instance
-    (ws-stop neos-live-editor/server-instance)))
+    (ws-stop neos-live-editor/server-instance)
+    (setq neos-live-editor/server-instance nil)))
 
 (provide 'neos-live-editor)
 ;;; neos-live-editor.el ends here
