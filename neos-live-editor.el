@@ -51,10 +51,10 @@ For format information, please look at
 				       1)) ;; Adjust so that first position is 1.
 
       (neos-live-editor/format/delete-invisible-text)
+      (neos-live-editor/format/insert-cursor cursor-pos-marker)
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
       	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
-      (neos-live-editor/format/insert-cursor cursor-pos-marker)
       (neos-live-editor/format/apply-tags)
 
       ;; Release every markers
