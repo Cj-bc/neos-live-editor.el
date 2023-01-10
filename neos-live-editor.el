@@ -80,37 +80,37 @@ For format information, please look at
       	  (if (eq next-change nil)
       	      (goto-char (point-max))
       	    (if (not (eq current-face nil))
-      		(progn (insert (format "<color=%s>"
-				       (neos-live-editor/format/retrive-fgcolor current-face)))
-      	      	       (goto-char next-change-marker)
-      	      	       (insert "</color>")
-      	      	       )
+		(goto-char (neos-live-editor/format/surround-with (point)
+						       next-change
+						       "color"
+						       (neos-live-editor/format/retrive-fgcolor current-face)))
       	      (goto-char next-change-marker)))
       	  (set-marker next-change-marker nil))))))
 
 (defun neos-live-editor/format/retrive-fgcolor (face)
   "Return text representation of foreground color of given face."
-  (cond ((listp face) (car (seq-filter 'stringp (seq-map (lambda (s) (face-attribute s :foreground)) face))))
-	((symbolp face) (face-attribute face :foreground))
+  (cond ((listp face) (car (seq-filter 'stringp (seq-map (lambda (s) (face-attribute s :foreground nil t)) face))))
+	((symbolp face) (face-attribute face :foreground nil t))
 	((stringp face) nil) ;; TODO: How can I convert string name to face symbol?
 	(t nil)))
 
 (defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
   "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
+Return the position of last of sorrounded. (閉じタグの最後の文字の位置を返します)
 If BUFFER is `nil', it will use `current-buffer'.
-BEG, END should be integer or marker. TAG-NAME, PARAMETER should be string."
+BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be string."
   (save-excursion
-    (let ((buf (or buffer (current-buffer)))
-	  (end-marker (if (markerp end) end (set-marker (make-marker) end)))
-	  )
-      (goto-char beg)
-      (if parameter
-    	  (insert (format "<%s=%s>" tag-name parameter))
-	(insert (format "<%s>" tag-name)))
-      (goto-char end-marker)
-      (insert (format "</%s>" tag-name))
-      (set-marker end-marker nil)
-      )))
+    (with-current-buffer (or buffer (current-buffer))
+      (let ((end-marker (make-marker)));; (if (markerp end) end (set-marker (make-marker) end))))
+	(set-marker end-marker end)
+	(goto-char beg)
+	(if parameter
+    	    (insert (format "<%s=%s>" tag-name parameter))
+	  (insert (format "<%s>" tag-name)))
+	(goto-char end-marker)
+	(insert (format "</%s>" tag-name))
+	(set-marker end-marker nil))
+      (point))))
 
 (defun neos-live-editor/format/append-line-number (window-start-line-number &optional buffer)
   "Insert line number at the beginning of each line in BUFFER (or `current-buffer' when it's nil)
