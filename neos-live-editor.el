@@ -150,6 +150,40 @@ given BUFFER (or `current-buffer' when it's nil"
   		   (goto-char invisible-start)
   		   t))))))))
 
+(defun neos-live-editor/format/buffer-visible-substring (beg end &optional buffer)
+  "`buffer-substring' but without strings with `invisible' text property/overlay"
+  (let ((result-buf (generate-new-buffer " *temp-handwritten*")))
+    (unwind-protect
+	(with-current-buffer (or buffer (current-buffer))
+	  (save-excursion
+      	    (goto-char (point-min))
+      	    ;; 1. Make sure while loop start with `point' being placed at
+      	    ;; text that is visible.
+      	    (unless (equal (get-text-property (point) 'invisible) nil)
+      	      (goto-char (next-single-char-property-change (point) 'invisible nil (point-max))))
+      	    ;; For each iteration, it will do:
+      	    ;; 1. Copy & insert visible text into `result-buf'
+      	    ;; 2. Find next visible text beggining point and move point to there
+      	    (while (or (> (point) end)
+      		       (pcase (next-single-char-property-change (point) 'invisible)
+			 ;; When 'invisible does not change till buffer end
+      			 ((pred (lambda (p) (eq p (point-max))))
+      			  (let ((visible-text (buffer-substring (point) (point-max))))
+      			    (with-current-buffer result-buf (insert visible-text)))
+			  nil)
+      			 (invisible-start
+      			  (let ((visible-text (buffer-substring (point) invisible-start)))
+      			    (with-current-buffer result-buf (insert visible-text)))
+			  (goto-char invisible-start)
+      	       		  (pcase (next-single-char-property-change (point) 'invisible)
+			    ;; When 'invisible does not change till buffer end
+      	       		    ((pred (lambda (p) (eq p (point-max)))) nil)
+      	       		    (visible-start
+      	       		     (goto-char visible-start)
+      			     t)))))))
+	  (with-current-buffer result-buf (buffer-string)))
+      (kill-buffer result-buf))))
+
 (defun neos-live-editor/server (request)
   "Server program for neos-live-editor. It should be used with `ws-start'"
   (with-slots (process headers) request
