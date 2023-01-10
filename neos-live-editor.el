@@ -129,7 +129,6 @@ First line will be `window-start-line-number'"
   (with-slots (process headers) request
   		  (ws-response-header process 200 '("Content-type" . "text/plain"))
   		  (let* ((window (frame-selected-window))
-  			 (buf (window-buffer window))
   			 (start (window-start window))
   			 (end (window-end window))
   			 )
