@@ -155,7 +155,7 @@ given BUFFER (or `current-buffer' when it's nil"
       (goto-char (point-min))
       ;; 1. Make sure while loop start with `point' being placed at
       ;; text that have `invisible' enabled.
-      (when (equal (get-text-property (point) 'invisible) nil)
+      (unless (get-text-property (point) 'invisible)
 	(goto-char (next-single-property-change (point) 'invisible nil (point-max))))
       ;; For each iteration, it will do:
       ;; 1. Remove invisible text
