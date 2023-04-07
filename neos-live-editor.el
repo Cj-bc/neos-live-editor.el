@@ -52,6 +52,7 @@ For format information, please look at
 
       (neos-live-editor/format/delete-invisible-text)
       (neos-live-editor/format/insert-cursor cursor-pos-marker)
+      (neos-live-editor/format/bake-prefixes)
       (neos-live-editor/format/append-line-number
        (with-current-buffer original-buffer
       	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
@@ -61,14 +62,30 @@ For format information, please look at
       (set-marker cursor-pos-marker nil)
       (buffer-string))))
 
+
+(defun neos-live-editor/format/bake-prefixes (&optional buffer)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Bake `line-prefix' and `wrap-prefix' into buffer. That means, those values
+will be directly inserted into the buffer.
+"
+  (with-current-buffer (or buffer (current-buffer))
+    (goto-char (point-min))
+    (while (not (eobp))
+      (let ((pref (get-text-property (point) 'line-prefix)))
+	(if pref (insert pref)))
+      (forward-line 1))))
+
+
 (defun neos-live-editor/format/insert-cursor (cursor-pos &optional buffer)
-  "Insert cursor text at CURSOR-POS (MARKER) on BUFFER (or `current-buffer' when it's nil)"
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert cursor text at CURSOR-POS (MARKER) on BUFFER (or `current-buffer' when it's nil)"
   (with-current-buffer (or buffer (current-buffer))
     (goto-char cursor-pos)
     (insert "<$cursor />")))
 
 (defun neos-live-editor/format/apply-tags (&optional buffer)
-  "Insert neos' rich text tags based on face."
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert neos' rich text tags based on face."
   (let ((buf (or buffer (current-buffer))))
     (save-excursion
       (goto-char (point-min))
@@ -95,7 +112,8 @@ For format information, please look at
 	(t nil)))
 
 (defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
-  "Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
 Return the position of last of sorrounded. (閉じタグの最後の文字の位置を返します)
 If BUFFER is `nil', it will use `current-buffer'.
 BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be string."
@@ -113,7 +131,8 @@ BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be
       (point))))
 
 (defun neos-live-editor/format/append-line-number (window-start-line-number &optional buffer)
-  "Insert line number at the beginning of each line in BUFFER (or `current-buffer' when it's nil)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert line number at the beginning of each line in BUFFER (or `current-buffer' when it's nil)
 First line will be `window-start-line-number'"
   (let* ((buf (or buffer (current-buffer)))
 	 (offset (- window-start-line-number 1)))
@@ -128,7 +147,8 @@ First line will be `window-start-line-number'"
       	  )))))
 
 (defun neos-live-editor/format/delete-invisible-text (&optional buffer)
-  "Delete all texts that have any sort of 'invisible' text property in
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Delete all texts that have any sort of 'invisible' text property in
 given BUFFER (or `current-buffer' when it's nil"
   (with-current-buffer (or buffer (current-buffer))
     (save-excursion
