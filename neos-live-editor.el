@@ -42,10 +42,17 @@ For format information, please look at
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
   (let* ((original-buffer (window-buffer original-window))
 	 (text (with-current-buffer original-buffer (buffer-substring begin end)))
+	 (original-overlays (flatten-list (with-current-buffer original-buffer (overlay-lists))))
 	 (cursor-pos-marker (make-marker)))
     (with-temp-buffer
       ;; Add markers before modifying original text
       (insert text)
+
+      ;; Delete regions that are covered by overlay with `invisible' property
+      (dolist (ovl original-overlays)
+	(let ((inv (overlay-get ovl 'invisible)))
+	  (when inv (delete-region (overlay-start ovl) (overlay-end ovl)))))
+
       (set-marker cursor-pos-marker (+ (- (window-point original-window)
 					  (window-start original-window))
 				       1)) ;; Adjust so that first position is 1.
