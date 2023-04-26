@@ -48,14 +48,15 @@ For format information, please look at
       ;; Add markers before modifying original text
       (insert text)
 
+      (set-marker cursor-pos-marker (+ (- (window-point original-window)
+					  (window-start original-window))
+				       1)) ;; Adjust so that first position is 1.
+
       ;; Delete regions that are covered by overlay with `invisible' property
       (dolist (ovl original-overlays)
 	(let ((inv (overlay-get ovl 'invisible)))
 	  (when inv (delete-region (overlay-start ovl) (overlay-end ovl)))))
 
-      (set-marker cursor-pos-marker (+ (- (window-point original-window)
-					  (window-start original-window))
-				       1)) ;; Adjust so that first position is 1.
 
       (neos-live-editor/format/delete-invisible-text)
       (neos-live-editor/format/insert-cursor cursor-pos-marker)
