@@ -55,7 +55,10 @@ For format information, please look at
       ;; Delete regions that are covered by overlay with `invisible' property
       (dolist (ovl original-overlays)
 	(let ((inv (overlay-get ovl 'invisible)))
-	  (when inv (delete-region (overlay-start ovl) (overlay-end ovl)))))
+	  ;; We have to offset overlay start/end because we inserted _only part of original buffer_
+	  ;; into current temporary buffer
+	  (when inv (delete-region (1+ (- (overlay-start ovl) begin))
+				   (1+ (- (overlay-end ovl) begin))))))
 
 
       (neos-live-editor/format/delete-invisible-text)
