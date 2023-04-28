@@ -42,7 +42,9 @@ For format information, please look at
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
   (let* ((original-buffer (window-buffer original-window))
 	 (text (with-current-buffer original-buffer (buffer-substring begin end)))
-	 (original-overlays (flatten-list (with-current-buffer original-buffer (overlay-lists))))
+	 ;; Sort overlays by its start position so that we can start to apply them from latest one
+	 (original-overlays (seq-sort '(lambda (a b) (> (overlay-start a) (overlay-start b)))
+				      (flatten-list (with-current-buffer original-buffer (overlay-lists)))))
 	 (cursor-pos-marker (make-marker)))
     (with-temp-buffer
       ;; Add markers before modifying original text
