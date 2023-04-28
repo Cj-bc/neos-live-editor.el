@@ -35,13 +35,13 @@ If it's nil, no server is running.")
     (process-send-string process "This is test\n"))
   )
 
-(defun neos-live-editor/format (original-window begin end)
+(defun neos-live-editor/format (original-window begin)
   "Format using neos' rich text format.
 For format information, please look at
 
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
   (let* ((original-buffer (window-buffer original-window))
-	 (text (with-current-buffer original-buffer (buffer-substring begin end)))
+	 (text (with-current-buffer original-buffer (buffer-substring begin (point-max))))
 	 ;; Sort overlays by its start position so that we can start to apply them from latest one
 	 (original-overlays (seq-sort '(lambda (a b) (> (overlay-start a) (overlay-start b)))
 				      (flatten-list (with-current-buffer original-buffer (overlay-lists)))))
@@ -225,9 +225,8 @@ given BUFFER (or `current-buffer' when it's nil"
   		  (ws-response-header process 200 '("Content-type" . "text/plain"))
   		  (let* ((window (frame-selected-window))
   			 (start (window-start window))
-  			 (end (window-end window))
   			 )
-  		    (process-send-string process (neos-live-editor/format window start end))
+  		    (process-send-string process (neos-live-editor/format window start))
   		    )))
 
 (defun neos-live-editor/run (port-number &optional log-buffer)
