@@ -254,5 +254,14 @@ If server is running at any port, it won't run again.
     (ws-stop neos-live-editor/server-instance)
     (setq neos-live-editor/server-instance nil)))
 
+
+(defun neos-live-editor/minibuffer ()
+  "Returns content of minibuffer with neos rich text format.
+It'll return empty string if there's no active minibuffer."
+  (let ((win (active-minibuffer-window)))
+    (if win
+	(with-current-buffer (window-buffer win)
+	  (neos-live-editor/format win (point-min)))
+      "")))
 (provide 'neos-live-editor)
 ;;; neos-live-editor.el ends here
