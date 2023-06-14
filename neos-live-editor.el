@@ -229,6 +229,12 @@ given BUFFER (or `current-buffer' when it's nil"
   		    (process-send-string process (neos-live-editor/format window start))
   		    )))
 
+(defun neos-live-editor/server/minibuffer (request)
+  (with-slots (process headers) request
+    (ws-response-header process 200 '("Content-type" . "text/plain"))
+    (process-send-string process (neos-live-editor/minibuffer)))
+  )
+
 (defun neos-live-editor/run (port-number &optional log-buffer)
   "Run neos-live-editor server and store that server instance into
 `neos-live-editor/server-instance' variable.
@@ -236,7 +242,8 @@ If server is running at any port, it won't run again.
 "
   (if neos-live-editor/server-instance
       (message "Server is already running.")
-    (pcase (ws-start '(((:GET . ".*") . neos-live-editor/server)
+    (pcase (ws-start '(((:GET . "^/v2/minibuffer") . neos-live-editor/server/minibuffer)
+		       ((:GET . ".*") . neos-live-editor/server)
 		       ;; Fallback
 		       ((lambda (_) t)
 			. (lambda (request)
