@@ -28,7 +28,6 @@
   "Contains `ws-server' object running neos-live-editor.
 If it's nil, no server is running.")
 
-  )
 
 (defun neos-live-editor/format (original-window begin)
   "Format using neos' rich text format.
