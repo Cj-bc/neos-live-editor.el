@@ -50,6 +50,11 @@ For format information, please look at
       ;; Add markers before modifying original text
       (insert text)
 
+      ;; In order to remove read-only text property, I have to set `inhibit-read-only' to non-nil
+      ;; according to [info:elisp#Special Properties]
+      (let ((inhibit-read-only t))
+	(remove-text-properties (point-min) (point-max) '(read-only nil)))
+
       (set-marker cursor-pos-marker (+ (- (window-point original-window)
 					  (window-start original-window))
 				       1)) ;; Adjust so that first position is 1.
