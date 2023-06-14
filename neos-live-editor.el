@@ -236,9 +236,14 @@ If server is running at any port, it won't run again.
 "
   (if neos-live-editor/server-instance
       (message "Server is already running.")
-    (pcase (ws-start 'neos-live-editor/server
-  			   port-number (or log-buffer "neos-live-editor-log")
-			   :host "0.0.0.0")
+    (pcase (ws-start '(((:GET . ".*") . neos-live-editor/server)
+		       ;; Fallback
+		       ((lambda (_) t)
+			. (lambda (request)
+			    (with-slots (process) request
+			      (ws-response-header process 404)))))
+  		     port-number (or log-buffer "neos-live-editor-log")
+		     :host "0.0.0.0")
       ('nil (message "failed to run neos-live-editor server"))
       (server (setq neos-live-editor/server-instance server)
 	      (message "neos-live-editor is running at port %d" port-number)))))
