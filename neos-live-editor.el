@@ -119,8 +119,14 @@ Insert neos' rich text tags based on face."
       	  (set-marker next-change-marker nil))))))
 
 (defun neos-live-editor/format/retrive-fgcolor (face)
-  "Return text representation of foreground color of given face."
-  (cond ((listp face) (car (seq-filter 'stringp (seq-map (lambda (s) (face-attribute s :foreground nil t)) face))))
+  "Return text representation of foreground color of given face.
+It follows all inheritance if given FACE does not specify foreground
+color, but it does not merge `default' face to reduce amount of text
+to send to neos.
+"
+  (cond ((and (listp face) (facep (car face)))
+	 (car (seq-filter 'stringp (seq-map 'neos-live-editor/format/retrive-fgcolor face))))
+	((and (listp face) (plist-get face :foreground)) (plist-get face :foreground))
 	((symbolp face) (face-attribute face :foreground nil t))
 	((stringp face) nil) ;; TODO: How can I convert string name to face symbol?
 	(t nil)))
