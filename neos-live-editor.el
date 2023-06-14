@@ -28,11 +28,6 @@
   "Contains `ws-server' object running neos-live-editor.
 If it's nil, no server is running.")
 
-(defun neos-live-editor/handler/v1/neos (request)
-  "handler function for default neos-live-editor endpoint"
-  (with-slots (process headers) request
-    (ws-response-header process 200 '("Content-type" . "text/plain"))
-    (process-send-string process "This is test\n"))
   )
 
 (defun neos-live-editor/format (original-window begin)
