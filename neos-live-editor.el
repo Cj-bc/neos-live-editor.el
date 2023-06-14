@@ -224,7 +224,7 @@ given BUFFER (or `current-buffer' when it's nil"
 	  (with-current-buffer result-buf (buffer-string)))
       (kill-buffer result-buf))))
 
-(defun neos-live-editor/server (request)
+(defun neos-live-editor/handler/current-buffer (request)
   "Server program for neos-live-editor. It should be used with `ws-start'"
   (with-slots (process headers) request
   		  (ws-response-header process 200 '("Content-type" . "text/plain"))
@@ -234,7 +234,7 @@ given BUFFER (or `current-buffer' when it's nil"
   		    (process-send-string process (neos-live-editor/format window start))
   		    )))
 
-(defun neos-live-editor/server/minibuffer (request)
+(defun neos-live-editor/handler/minibuffer (request)
   (with-slots (process headers) request
     (ws-response-header process 200 '("Content-type" . "text/plain"))
     (process-send-string process (neos-live-editor/minibuffer)))
@@ -247,8 +247,8 @@ If server is running at any port, it won't run again.
 "
   (if neos-live-editor/server-instance
       (message "Server is already running.")
-    (pcase (ws-start '(((:GET . "^/v2/minibuffer") . neos-live-editor/server/minibuffer)
-		       ((:GET . ".*") . neos-live-editor/server)
+    (pcase (ws-start '(((:GET . "^/v2/minibuffer") . neos-live-editor/handler/minibuffer)
+		       ((:GET . ".*") . neos-live-editor/handler/current-buffer)
 		       ;; Fallback
 		       ((lambda (_) t)
 			. (lambda (request)
