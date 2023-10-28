@@ -96,14 +96,15 @@ Insert neos' rich text tags based on face."
 	(let* ((next-change (next-single-property-change (point) 'face buf (point-max)))
       	       (next-change-marker (set-marker (make-marker) next-change))
       	       (current-face (get-text-property (point) 'face))
+	       (fgcolor (when current-face (neos-live-editor/format/retrive-fgcolor current-face)))
       	       )
       	  (if (eq next-change nil)
       	      (goto-char (point-max))
-      	    (if (not (eq current-face nil))
+      	    (if fgcolor
 		(goto-char (neos-live-editor/format/surround-with (point)
 						       next-change
 						       "color"
-						       (neos-live-editor/format/retrive-fgcolor current-face)))
+						       fgcolor))
       	      (goto-char next-change-marker)))
       	  (set-marker next-change-marker nil))))))
 
