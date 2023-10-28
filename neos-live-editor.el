@@ -53,18 +53,7 @@ For format information, please look at
 					  (window-start original-window))
 				       1)) ;; Adjust so that first position is 1.
 
-      ;; Delete regions that are covered by overlay with `invisible' property
-      (dolist (ovl original-overlays)
-	(let ((inv (overlay-get ovl 'invisible))
-	      ;; We have to offset overlay start/end because we inserted _only part of original buffer_
-	      ;; into current temporary buffer
-	      (start (1+ (- (overlay-start ovl) begin)))
-	      (end (1+ (- (overlay-end ovl) begin))))
-	  ;; Do not apply out-of-buffer overlays
-	  (when (and inv (< 0 start)) (delete-region start end))))
-
-
-      (neos-live-editor/format/delete-invisible-text)
+      (neos-live-editor/format/delete-invisible-text original-overlays begin)
       (neos-live-editor/format/insert-cursor cursor-pos-marker)
       (neos-live-editor/format/bake-prefixes)
       (neos-live-editor/format/append-line-number
@@ -166,12 +155,23 @@ First line will be `window-start-line-number'"
       	  (vertical-motion 1)
       	  )))))
 
-(defun neos-live-editor/format/delete-invisible-text (&optional buffer)
+(defun neos-live-editor/format/delete-invisible-text (original-overlays begin &optional buffer)
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Delete all texts that have any sort of 'invisible' text property in
 given BUFFER (or `current-buffer' when it's nil"
   (with-current-buffer (or buffer (current-buffer))
     (save-excursion
+      ;; -- Delete texts covered by overlays with invisible proprety set
+      (dolist (ovl original-overlays)
+	(let ((inv (overlay-get ovl 'invisible))
+	      ;; We have to offset overlay start/end because we inserted _only part of original buffer_
+	      ;; into current temporary buffer
+	      (start (1+ (- (overlay-start ovl) begin)))
+	      (end (1+ (- (overlay-end ovl) begin))))
+	  ;; Do not apply out-of-buffer overlays
+	  (when (and inv (< 0 start)) (progn (delete-region start end)))))
+
+      ;; -- Delete texts with invisible text properties
       (goto-char (point-min))
       ;; 1. Make sure while loop start with `point' being placed at
       ;; text that have `invisible' enabled.
