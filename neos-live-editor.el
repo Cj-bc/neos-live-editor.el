@@ -71,18 +71,18 @@ For format information, please look at
 Bake `line-prefix' and `wrap-prefix' into buffer. That means, those values
 will be directly inserted into the buffer.
 "
-    (goto-char (point-min))
-    (while (not (eobp))
-      (let ((pref (get-text-property (point) 'line-prefix)))
-	(if pref (insert pref)))
-      (forward-line 1)))
+  (goto-char (point-min))
+  (while (not (eobp))
+    (let ((pref (get-text-property (point) 'line-prefix)))
+      (if pref (insert pref)))
+    (forward-line 1)))
 
 
 (defun neos-live-editor/format/insert-cursor (cursor-pos)
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Insert cursor text at CURSOR-POS (MARKER) on `current-buffer'"
-    (goto-char cursor-pos)
-    (insert "<$cursor />"))
+  (goto-char cursor-pos)
+  (insert "<$cursor />"))
 
 (defun neos-live-editor/format/apply-tags ()
   "THIS MODIFIES THE BUFFER DIRECTLY.
@@ -100,9 +100,9 @@ Insert neos' rich text tags based on face."
       	      (goto-char (point-max))
       	    (if fgcolor
 		(goto-char (neos-live-editor/format/surround-with (point)
-						       next-change
-						       "color"
-						       fgcolor))
+								  next-change
+								  "color"
+								  fgcolor))
       	      (goto-char next-change-marker)))
       	  (set-marker next-change-marker nil))))))
 
@@ -125,16 +125,16 @@ Surround text between BEG and END in `current-buffer' with proper Neos's rich te
 Return the position of last of sorrounded. (閉じタグの最後の文字の位置を返します)
 BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be string."
   (save-excursion
-      (let ((end-marker (make-marker)));; (if (markerp end) end (set-marker (make-marker) end))))
-	(set-marker end-marker end)
-	(goto-char beg)
-	(if parameter
-    	    (insert (format "<%s=%s>" tag-name parameter))
-	  (insert (format "<%s>" tag-name)))
-	(goto-char end-marker)
-	(insert (format "</%s>" tag-name))
-	(set-marker end-marker nil))
-      (point)))
+    (let ((end-marker (make-marker)));; (if (markerp end) end (set-marker (make-marker) end))))
+      (set-marker end-marker end)
+      (goto-char beg)
+      (if parameter
+    	  (insert (format "<%s=%s>" tag-name parameter))
+	(insert (format "<%s>" tag-name)))
+      (goto-char end-marker)
+      (insert (format "</%s>" tag-name))
+      (set-marker end-marker nil))
+    (point)))
 
 (defun neos-live-editor/format/append-line-number (window-start-line-number)
   "THIS MODIFIES THE BUFFER DIRECTLY.
@@ -142,79 +142,82 @@ Insert line number at the beginning of each line in `current-buffer'
 First line will be `window-start-line-number'"
   (let* ((offset (- window-start-line-number 1)))
     (save-excursion
-	(goto-char (point-min))
-	(while (not (eobp))
-      	  (insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos))) 
-			      -4)
-		  "    ")
-      	  (vertical-motion 1)
-      	  ))))
+      (goto-char (point-min))
+      (while (not (eobp))
+      	(insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos)))
+			    -4)
+		"    ")
+      	(vertical-motion 1)
+      	))))
 
 (defun neos-live-editor/format/delete-invisible-text (original-overlays begin)
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Delete all texts that have any sort of 'invisible' text property in
 `current-buffer'"
-    (save-excursion
-      ;; -- Delete texts covered by overlays with invisible proprety set
-      (dolist (ovl original-overlays)
-	(let ((inv (overlay-get ovl 'invisible))
-	      ;; We have to offset overlay start/end because we inserted _only part of original buffer_
-	      ;; into current temporary buffer
-	      (start (1+ (- (overlay-start ovl) begin)))
-	      (end (1+ (- (overlay-end ovl) begin))))
-	  ;; Do not apply out-of-buffer overlays
-	  (when (and inv (< 0 start)) (progn (delete-region start end)))))
+  (save-excursion
+    ;; -- Delete texts covered by overlays with invisible proprety set
+    (dolist (ovl original-overlays)
+      (let ((inv (overlay-get ovl 'invisible))
+	    ;; We have to offset overlay start/end because we inserted _only part of original buffer_
+	    ;; into current temporary buffer
+	    (start (1+ (- (overlay-start ovl) begin)))
+	    (end (1+ (- (overlay-end ovl) begin))))
+	;; Do not apply out-of-buffer overlays
+	(when (and inv (< 0 start)) (progn (delete-region start end)))))
 
-      ;; -- Delete texts with invisible text properties
-      (goto-char (point-min))
-      ;; 1. Make sure while loop start with `point' being placed at
-      ;; text that have `invisible' enabled.
-      (unless (get-text-property (point) 'invisible)
-	(goto-char (next-single-property-change (point) 'invisible nil (point-max))))
-      ;; For each iteration, it will do:
-      ;; 1. Remove invisible text
-      ;; 2. Find next invisible text beggining point and move point to there
-      (while (pcase (next-single-property-change (point) 'invisible)
-  	       ('nil (delete-region (point) (point-max)) nil)
-  	       (visible-start
-  		(delete-region (point) visible-start)
-  		(pcase (next-single-property-change (point) 'invisible)
-  		  ('nil nil)
-		  (invisible-start
-  		   (goto-char invisible-start)
-  		   t)))))))
+    ;; -- Delete texts with invisible text properties
+    (goto-char (point-min))
+    ;; 1. Make sure while loop start with `point' being placed at
+    ;; text that have `invisible' enabled.
+    (unless (get-text-property (point) 'invisible)
+      (goto-char (next-single-property-change (point) 'invisible nil (point-max))))
+    ;; For each iteration, it will do:
+    ;; 1. Remove invisible text
+    ;; 2. Find next invisible text beggining point and move point to there
+    (while (pcase (next-single-property-change (point) 'invisible)
+  	     ('nil (delete-region (point) (point-max)) nil)
+  	     (visible-start
+	      (let ((invisible-type (get-text-property (point) 'invisible)))
+		(delete-region (point) visible-start)
+		(when (eq invisible-type 'org-fold-outline)
+		  (insert "...")))
+  	      (pcase (next-single-property-change (point) 'invisible)
+  		('nil nil)
+		(invisible-start
+  		 (goto-char invisible-start)
+  		 t)))))))
 
 (defun neos-live-editor/format/buffer-visible-substring (beg end)
   "`buffer-substring' but without strings with `invisible' text property/overlay"
   (let ((result-buf (generate-new-buffer " *temp-handwritten*")))
     (unwind-protect
-	  (save-excursion
-      	    (goto-char beg)
-      	    ;; 1. Make sure while loop start with `point' being placed at
-      	    ;; text that is visible.
-      	    (unless (equal (get-text-property (point) 'invisible) nil)
-      	      (goto-char (next-single-char-property-change (point) 'invisible nil (point-max))))
-      	    ;; For each iteration, it will do:
-      	    ;; 1. Copy & insert visible text into `result-buf'
-      	    ;; 2. Find next visible text beggining point and move point to there
-      	    (while (or (> (point) end)
-      		       (pcase (next-single-char-property-change (point) 'invisible)
-			 ;; When 'invisible does not change till buffer end
-      			 ((pred (lambda (p) (eq p (point-max))))
-      			  (let ((visible-text (buffer-substring (point) (point-max))))
-      			    (with-current-buffer result-buf (insert visible-text)))
-			  nil)
-      			 (invisible-start
-      			  (let ((visible-text (buffer-substring (point) invisible-start)))
-      			    (with-current-buffer result-buf (insert visible-text)))
-			  (goto-char invisible-start)
-      	       		  (pcase (next-single-char-property-change (point) 'invisible)
-			    ;; When 'invisible does not change till buffer end
-      	       		    ((pred (lambda (p) (eq p (point-max)))) nil)
-      	       		    (visible-start
-      	       		     (goto-char visible-start)
-      			     t)))))))
-	  (with-current-buffer result-buf (buffer-string))
+	(save-excursion
+      	  (goto-char beg)
+      	  ;; 1. Make sure while loop start with `point' being placed at
+      	  ;; text that is visible.
+      	  (unless (equal (get-text-property (point) 'invisible) nil)
+      	    (goto-char (next-single-char-property-change (point) 'invisible nil (point-max))))
+      	  ;; For each iteration, it will do:
+      	  ;; 1. Copy & insert visible text into `result-buf'
+      	  ;; 2. Find next visible text beggining point and move point to there
+      	  (while (or (> (point) end)
+      		     (pcase (next-single-char-property-change (point) 'invisible)
+		       ;; When 'invisible does not change till buffer end
+      		       ((pred (lambda (p) (eq p (point-max))))
+      			(let ((visible-text (buffer-substring (point) (point-max))))
+      			  (with-current-buffer result-buf (insert visible-text)))
+			nil)
+      		       (invisible-start
+      			(let ((visible-text (buffer-substring (point) invisible-start)))
+      			  (with-current-buffer result-buf (insert visible-text)))
+			(goto-char invisible-start)
+      	       		(pcase (next-single-char-property-change (point) 'invisible)
+			  ;; When 'invisible does not change till buffer end
+      	       		  ((pred (lambda (p) (eq p (point-max)))) nil)
+      	       		  (visible-start
+      	       		   (goto-char visible-start)
+      			   t)))))))
+      (with-current-buffer result-buf (buffer-string))
       (kill-buffer result-buf))))
 
 (defun neos-live-editor/handler/current-buffer (request)
