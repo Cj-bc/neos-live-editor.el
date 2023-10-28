@@ -66,30 +66,28 @@ For format information, please look at
       (buffer-string))))
 
 
-(defun neos-live-editor/format/bake-prefixes (&optional buffer)
+(defun neos-live-editor/format/bake-prefixes ()
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Bake `line-prefix' and `wrap-prefix' into buffer. That means, those values
 will be directly inserted into the buffer.
 "
-  (with-current-buffer (or buffer (current-buffer))
     (goto-char (point-min))
     (while (not (eobp))
       (let ((pref (get-text-property (point) 'line-prefix)))
 	(if pref (insert pref)))
-      (forward-line 1))))
+      (forward-line 1)))
 
 
-(defun neos-live-editor/format/insert-cursor (cursor-pos &optional buffer)
+(defun neos-live-editor/format/insert-cursor (cursor-pos)
   "THIS MODIFIES THE BUFFER DIRECTLY.
-Insert cursor text at CURSOR-POS (MARKER) on BUFFER (or `current-buffer' when it's nil)"
-  (with-current-buffer (or buffer (current-buffer))
+Insert cursor text at CURSOR-POS (MARKER) on `current-buffer'"
     (goto-char cursor-pos)
-    (insert "<$cursor />")))
+    (insert "<$cursor />"))
 
-(defun neos-live-editor/format/apply-tags (&optional buffer)
+(defun neos-live-editor/format/apply-tags ()
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Insert neos' rich text tags based on face."
-  (let ((buf (or buffer (current-buffer))))
+  (let ((buf (current-buffer)))
     (save-excursion
       (goto-char (point-min))
       (while (not (eobp))
@@ -121,14 +119,12 @@ to send to neos.
 	((stringp face) nil) ;; TODO: How can I convert string name to face symbol?
 	(t nil)))
 
-(defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter buffer)
+(defun neos-live-editor/format/surround-with (beg end tag-name &optional parameter)
   "THIS MODIFIES THE BUFFER DIRECTLY.
-Surround text between BEG and END in BUFFER with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
+Surround text between BEG and END in `current-buffer' with proper Neos's rich text tag based on TAG-NAME and PARAMETER.
 Return the position of last of sorrounded. (閉じタグの最後の文字の位置を返します)
-If BUFFER is `nil', it will use `current-buffer'.
 BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be string."
   (save-excursion
-    (with-current-buffer (or buffer (current-buffer))
       (let ((end-marker (make-marker)));; (if (markerp end) end (set-marker (make-marker) end))))
 	(set-marker end-marker end)
 	(goto-char beg)
@@ -138,29 +134,26 @@ BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be
 	(goto-char end-marker)
 	(insert (format "</%s>" tag-name))
 	(set-marker end-marker nil))
-      (point))))
+      (point)))
 
-(defun neos-live-editor/format/append-line-number (window-start-line-number &optional buffer)
+(defun neos-live-editor/format/append-line-number (window-start-line-number)
   "THIS MODIFIES THE BUFFER DIRECTLY.
-Insert line number at the beginning of each line in BUFFER (or `current-buffer' when it's nil)
+Insert line number at the beginning of each line in `current-buffer'
 First line will be `window-start-line-number'"
-  (let* ((buf (or buffer (current-buffer)))
-	 (offset (- window-start-line-number 1)))
+  (let* ((offset (- window-start-line-number 1)))
     (save-excursion
-      (with-current-buffer buf
 	(goto-char (point-min))
 	(while (not (eobp))
       	  (insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos))) 
 			      -4)
 		  "    ")
       	  (vertical-motion 1)
-      	  )))))
+      	  ))))
 
-(defun neos-live-editor/format/delete-invisible-text (original-overlays begin &optional buffer)
+(defun neos-live-editor/format/delete-invisible-text (original-overlays begin)
   "THIS MODIFIES THE BUFFER DIRECTLY.
 Delete all texts that have any sort of 'invisible' text property in
-given BUFFER (or `current-buffer' when it's nil"
-  (with-current-buffer (or buffer (current-buffer))
+`current-buffer'"
     (save-excursion
       ;; -- Delete texts covered by overlays with invisible proprety set
       (dolist (ovl original-overlays)
@@ -189,15 +182,14 @@ given BUFFER (or `current-buffer' when it's nil"
   		  ('nil nil)
 		  (invisible-start
   		   (goto-char invisible-start)
-  		   t))))))))
+  		   t)))))))
 
-(defun neos-live-editor/format/buffer-visible-substring (beg end &optional buffer)
+(defun neos-live-editor/format/buffer-visible-substring (beg end)
   "`buffer-substring' but without strings with `invisible' text property/overlay"
   (let ((result-buf (generate-new-buffer " *temp-handwritten*")))
     (unwind-protect
-	(with-current-buffer (or buffer (current-buffer))
 	  (save-excursion
-      	    (goto-char (point-min))
+      	    (goto-char beg)
       	    ;; 1. Make sure while loop start with `point' being placed at
       	    ;; text that is visible.
       	    (unless (equal (get-text-property (point) 'invisible) nil)
@@ -222,7 +214,7 @@ given BUFFER (or `current-buffer' when it's nil"
       	       		    (visible-start
       	       		     (goto-char visible-start)
       			     t)))))))
-	  (with-current-buffer result-buf (buffer-string)))
+	  (with-current-buffer result-buf (buffer-string))
       (kill-buffer result-buf))))
 
 (defun neos-live-editor/handler/current-buffer (request)
