@@ -187,6 +187,96 @@ Delete all texts that have any sort of 'invisible' text property in
   		 (goto-char invisible-start)
   		 t)))))))
 
+(cl-defun neos-live-editor/formatter/bake-prefixes (&allow-other-keys)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Bake `line-prefix' and `wrap-prefix' into buffer. That means, those values
+will be directly inserted into the buffer.
+"
+  (goto-char (point-min))
+  (while (not (eobp))
+    (let ((pref (get-text-property (point) 'line-prefix)))
+      (if pref (insert pref)))
+    (forward-line 1)))
+
+(cl-defun neos-live-editor/formatter/insert-cursor (&key cursor &allow-other-keys)
+    "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert cursor text at CURSOR (MARKER or INTEGER)"
+    (goto-char cursor)
+    (insert "<$cursor />"))
+
+(cl-defun neos-live-editor/formatter/apply-tags (&allow-other-keys)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert neos' rich text tags based on face."
+  (let ((buf (current-buffer)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+	(let* ((next-change (next-single-property-change (point) 'face buf (point-max)))
+      	       (next-change-marker (set-marker (make-marker) next-change))
+      	       (current-face (get-text-property (point) 'face))
+	       (fgcolor (when current-face (neos-live-editor/format/retrive-fgcolor current-face)))
+      	       )
+      	  (if (eq next-change nil)
+      	      (goto-char (point-max))
+      	    (if fgcolor
+		(goto-char (neos-live-editor/format/surround-with (point)
+								  next-change
+								  "color"
+								  fgcolor))
+      	      (goto-char next-change-marker)))
+      	  (set-marker next-change-marker nil))))))
+
+(cl-defun neos-live-editor/formatter/append-line-number (&key original-window &allow-other-keys)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Insert line number at the beginning of each line in `current-buffer'"
+  (let* ((window-start-line-number (line-number-at-pos (window-start original-window)))
+	 (offset (- window-start-line-number 1)))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+      	(insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos)))
+			    -4)
+		"    ")
+      	(vertical-motion 1)
+      	))))
+
+(cl-defun neos-live-editor/formatter/delete-invisible-text (&key original-buffer begin &allow-other-keys)
+  "THIS MODIFIES THE BUFFER DIRECTLY.
+Delete all texts that have any sort of 'invisible' text property in
+`current-buffer'"
+  (save-excursion
+    ;; -- Delete texts covered by overlays with invisible proprety set
+    (dolist (ovl (seq-sort '(lambda (a b) (> (overlay-start a) (overlay-start b)))
+			   (flatten-list (with-current-buffer original-buffer (overlay-lists)))))
+      (let ((inv (overlay-get ovl 'invisible))
+	    ;; We have to offset overlay start/end because we inserted _only part of original buffer_
+	    ;; into current temporary buffer
+	    (start (1+ (- (overlay-start ovl) begin)))
+	    (end (1+ (- (overlay-end ovl) begin))))
+	;; Do not apply out-of-buffer overlays
+	(when (and inv (< 0 start)) (progn (delete-region start end)))))
+
+    ;; -- Delete texts with invisible text properties
+    (goto-char (point-min))
+    ;; 1. Make sure while loop start with `point' being placed at
+    ;; text that have `invisible' enabled.
+    (unless (get-text-property (point) 'invisible)
+      (goto-char (next-single-property-change (point) 'invisible nil (point-max))))
+    ;; For each iteration, it will do:
+    ;; 1. Remove invisible text
+    ;; 2. Find next invisible text beggining point and move point to there
+    (while (pcase (next-single-property-change (point) 'invisible)
+  	     ('nil (delete-region (point) (point-max)) nil)
+  	     (visible-start
+	      (let ((invisible-type (get-text-property (point) 'invisible)))
+		(delete-region (point) visible-start)
+		(when (eq invisible-type 'org-fold-outline)
+		  (insert "...")))
+  	      (pcase (next-single-property-change (point) 'invisible)
+  		('nil nil)
+		(invisible-start
+  		 (goto-char invisible-start)
+  		 t)))))))
 
 (defun neos-live-editor/handler/current-buffer (request)
   "Server program for neos-live-editor. It should be used with `ws-start'"
