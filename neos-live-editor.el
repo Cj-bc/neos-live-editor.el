@@ -65,47 +65,6 @@ For format information, please look at
       (set-marker cursor-pos-marker nil)
       (buffer-string))))
 
-
-(defun neos-live-editor/format/bake-prefixes ()
-  "THIS MODIFIES THE BUFFER DIRECTLY.
-Bake `line-prefix' and `wrap-prefix' into buffer. That means, those values
-will be directly inserted into the buffer.
-"
-  (goto-char (point-min))
-  (while (not (eobp))
-    (let ((pref (get-text-property (point) 'line-prefix)))
-      (if pref (insert pref)))
-    (forward-line 1)))
-
-
-(defun neos-live-editor/format/insert-cursor (cursor-pos)
-  "THIS MODIFIES THE BUFFER DIRECTLY.
-Insert cursor text at CURSOR-POS (MARKER) on `current-buffer'"
-  (goto-char cursor-pos)
-  (insert "<$cursor />"))
-
-(defun neos-live-editor/format/apply-tags ()
-  "THIS MODIFIES THE BUFFER DIRECTLY.
-Insert neos' rich text tags based on face."
-  (let ((buf (current-buffer)))
-    (save-excursion
-      (goto-char (point-min))
-      (while (not (eobp))
-	(let* ((next-change (next-single-property-change (point) 'face buf (point-max)))
-      	       (next-change-marker (set-marker (make-marker) next-change))
-      	       (current-face (get-text-property (point) 'face))
-	       (fgcolor (when current-face (neos-live-editor/format/retrive-fgcolor current-face)))
-      	       )
-      	  (if (eq next-change nil)
-      	      (goto-char (point-max))
-      	    (if fgcolor
-		(goto-char (neos-live-editor/format/surround-with (point)
-								  next-change
-								  "color"
-								  fgcolor))
-      	      (goto-char next-change-marker)))
-      	  (set-marker next-change-marker nil))))))
-
 (defun neos-live-editor/format/retrive-fgcolor (face)
   "Return text representation of foreground color of given face.
 It follows all inheritance if given FACE does not specify foreground
@@ -136,56 +95,8 @@ BEG, END should be integer (marker isn't allowed). TAG-NAME, PARAMETER should be
       (set-marker end-marker nil))
     (point)))
 
-(defun neos-live-editor/format/append-line-number (window-start-line-number)
-  "THIS MODIFIES THE BUFFER DIRECTLY.
-Insert line number at the beginning of each line in `current-buffer'
-First line will be `window-start-line-number'"
-  (let* ((offset (- window-start-line-number 1)))
-    (save-excursion
-      (goto-char (point-min))
-      (while (not (eobp))
-      	(insert (seq-subseq (format "     %s" (+ offset (line-number-at-pos)))
-			    -4)
-		"    ")
-      	(vertical-motion 1)
-      	))))
 
-(defun neos-live-editor/format/delete-invisible-text (original-overlays begin)
-  "THIS MODIFIES THE BUFFER DIRECTLY.
-Delete all texts that have any sort of 'invisible' text property in
-`current-buffer'"
-  (save-excursion
-    ;; -- Delete texts covered by overlays with invisible proprety set
-    (dolist (ovl original-overlays)
-      (let ((inv (overlay-get ovl 'invisible))
-	    ;; We have to offset overlay start/end because we inserted _only part of original buffer_
-	    ;; into current temporary buffer
-	    (start (1+ (- (overlay-start ovl) begin)))
-	    (end (1+ (- (overlay-end ovl) begin))))
-	;; Do not apply out-of-buffer overlays
-	(when (and inv (< 0 start)) (progn (delete-region start end)))))
 
-    ;; -- Delete texts with invisible text properties
-    (goto-char (point-min))
-    ;; 1. Make sure while loop start with `point' being placed at
-    ;; text that have `invisible' enabled.
-    (unless (get-text-property (point) 'invisible)
-      (goto-char (next-single-property-change (point) 'invisible nil (point-max))))
-    ;; For each iteration, it will do:
-    ;; 1. Remove invisible text
-    ;; 2. Find next invisible text beggining point and move point to there
-    (while (pcase (next-single-property-change (point) 'invisible)
-  	     ('nil (delete-region (point) (point-max)) nil)
-  	     (visible-start
-	      (let ((invisible-type (get-text-property (point) 'invisible)))
-		(delete-region (point) visible-start)
-		(when (eq invisible-type 'org-fold-outline)
-		  (insert "...")))
-  	      (pcase (next-single-property-change (point) 'invisible)
-  		('nil nil)
-		(invisible-start
-  		 (goto-char invisible-start)
-  		 t)))))))
 
 (cl-defun neos-live-editor/formatter/bake-prefixes (&allow-other-keys)
   "THIS MODIFIES THE BUFFER DIRECTLY.
