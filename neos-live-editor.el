@@ -29,8 +29,9 @@
 If it's nil, no server is running.")
 
 
-(defun neos-live-editor/format (original-window begin)
-  "Format using neos' rich text format.
+
+(defun neos-live-editor/format (original-window begin formatters)
+  "Format buffer and return.
 For format information, please look at
 
 <https://wiki.neos.com/Text_(Component)#Rich_text>"
@@ -53,13 +54,12 @@ For format information, please look at
 					  (window-start original-window))
 				       1)) ;; Adjust so that first position is 1.
 
-      (neos-live-editor/format/delete-invisible-text original-overlays begin)
-      (neos-live-editor/format/insert-cursor cursor-pos-marker)
-      (neos-live-editor/format/bake-prefixes)
-      (neos-live-editor/format/append-line-number
-       (with-current-buffer original-buffer
-      	 (line-number-at-pos (window-start (get-buffer-window original-buffer)))))
-      (neos-live-editor/format/apply-tags)
+      (dolist (formatter formatters)
+	(funcall formatter
+		 :cursor cursor-pos-marker
+		 :begin begin
+		 :original-buffer original-buffer
+		 :original-window original-window))
 
       ;; Release every markers
       (set-marker cursor-pos-marker nil)
@@ -285,7 +285,15 @@ Delete all texts that have any sort of 'invisible' text property in
   		  (let* ((window (frame-selected-window))
   			 (start (window-start window))
   			 )
-  		    (process-send-string process (neos-live-editor/format window start))
+  		    (process-send-string
+		     process
+		     (neos-live-editor/format window start
+					      '(neos-live-editor/formatter/delete-invisible-text
+						neos-live-editor/formatter/insert-cursor
+						neos-live-editor/formatter/bake-prefixes
+						neos-live-editor/formatter/append-line-number
+						neos-live-editor/formatter/apply-tags
+						)))
   		    )))
 
 (defun neos-live-editor/handler/minibuffer (request)
